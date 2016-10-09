@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head><title>Bar Chart- State_Population</title></head>
+<meta charset="utf-8">
+<style>
+
+.bar {
+  fill: steelblue;
+}
+
+.bar:hover {
+  fill: #ff7f0e;
+}
+</style>
+<body>
+<h2>
+<font face= "consolas">
+<b>
+Bar Chart - GDP Numbers
+</font></b></h2>
+<hr><br>
+<svg class="chart"></svg>
+<script type="text/javascript" src="d3.v3.js"></script>
+<script>
+
+var margin = {top: 50, right: 30, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var x = d3.scale.ordinal()
+    .rangeRoundBands([0, width], .1);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var chart = d3.select(".chart")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+var tooltip = chart.append("text")
+    .style("visibility", "hidden");
+
+/*displaying the population graph*/
+d3.tsv("state_population_gdp.tsv", type, function(error, data) {
+  x.domain(data.map(function(d) { return d.state; }));
+  y.domain([0, d3.max(data, function(d) { return d.gdp; })]);
+
+  chart.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+
+  chart.append("g")
+      .attr("class", "y axis")
+
+  chart.selectAll(".bar")
+      .data(data)
+    .enter().append("rect")
+      .attr("class", "bar")
+      .attr("x", function(d) { return x(d.state); })
+      .attr("y", function(d) { return y(d.gdp); })
+      .attr("height", function(d) { return height - y(d.gdp); })
+      .attr("width", x.rangeBand())
+
+      .on("mouseover", function(d,i){
+        var tipx = d3.select(this).attr("x");
+        var tipy = d3.select(this).attr("y");
+        tooltip.attr("x", tipx);
+        tooltip.attr("y", tipy);
+        //tooltip.att("dx", 50);
+        tooltip.attr("dy", -5);
+        tooltip.style("visibility", "visible");
+        tooltip.style("fill", "black");
+        tooltip.text(d.gdp);})
+
+      .on("mouseout", function(){
+            tooltip.style("visibility", "hidden");});
+});
+
+function type(d) {
+  d.gdp = +d.gdp;
+  return d;
+}
+</script>
+</body>
+</html>

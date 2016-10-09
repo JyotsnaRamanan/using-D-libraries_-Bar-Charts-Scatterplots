@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+
+<style>
+body {
+  font: 12px consolas;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.dot {
+
+  fill: steelblue;
+}
+
+.dot:hover{
+  fill:#ff7f0e;
+}
+.tooltip {
+  position: absolute;
+  width: 200px;
+  height: 28px;
+  pointer-events: none;
+}
+</style>
+<head>
+<title>Scatterplot- Per GDP </title>
+</head>
+<body>
+<p align="left">
+<font type = "sans serif"><b>
+<h2>Scatterplot- Per Capital GDP</h2>
+</b></p></font>
+<hr><br>
+
+<script type="text/javascript" src="d3.v3.js"></script>
+<script>
+var margin = {top: 20, right: 20, bottom: 30, left: 150},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var xValue = function(d) { return d.population;}, 
+    xScale = d3.scale.linear().range([0, width]), 
+    xMap = function(d) { return xScale(xValue(d));}, 
+    xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+
+var yValue = function(d) { return d.gdp;}, 
+    yScale = d3.scale.linear().range([height, 0]), 
+    yMap = function(d) { return yScale(yValue(d));}, 
+    yAxis = d3.svg.axis().scale(yScale).orient("left");
+
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+var tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+d3.tsv("state_population_gdp.tsv", function(error, data) {
+
+  data.forEach(function(d) {
+    d.population = +d.population;
+    d.gdp= +d.gdp;
+  });
+
+  xScale.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1]);
+  yScale.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
+
+  // x-axis
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+    .append("text")
+      .attr("class", "label")
+      .attr("x", width)
+      .attr("y", -6)
+      .style("text-anchor", "end")
+      .text("Population");
+
+  // y-axis
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("class", "label")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("GDP");
+
+  // appending the dots to the graph
+  svg.selectAll(".dot")
+      .data(data)
+    .enter().append("circle")
+      .attr("class", "dot")
+      .attr("r", 4)
+      .attr("cx", xMap)
+      .attr("cy", yMap) 
+      .on("mouseover", function(d) {
+          tooltip.transition()
+               .duration(200)
+               .style("opacity", .9);
+          tooltip.html(d["state"] + "<br/> " + Math.round((yValue(d)/xValue(d))*100)/100)
+               .style("left", (d3.event.pageX + 5) + "px")
+               .style("top", (d3.event.pageY - 28) + "px");
+      })
+      .on("mouseout", function(d) {
+          tooltip.transition()
+               .duration(500)
+               .style("opacity", 0);
+      });
+});
+
+</script>
+</body>
+</html>
